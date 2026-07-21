@@ -1,4 +1,4 @@
-export type OutputFormat = 'CLASSIFICATION' | 'TEXT' | 'JSON';
+export type OutputFormat = 'CLASSIFICATION' | 'TEXT' | 'JSON' | 'EXTRACTION';
 
 export interface OperatorResult {
   operatorSid?: string;

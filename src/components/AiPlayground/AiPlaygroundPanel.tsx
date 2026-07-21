@@ -9,6 +9,8 @@ import { useUID } from '@twilio-paste/core/uid-library';
 import RealtimeOperatorsTab from './RealtimeOperatorsTab';
 import PostCallOperatorsTab from './PostCallOperatorsTab';
 import CustomerMemoryTab from './CustomerMemory';
+import DigitalOperatorsTab from './DigitalOperatorsTab';
+import { getAiPlaygroundTaskIdentity } from '../../utils/taskIdentity';
 
 interface AiPlaygroundPanelProps {
   tasks?: Map<string, Flex.ITask>;
@@ -17,7 +19,9 @@ interface AiPlaygroundPanelProps {
 
 const AiPlaygroundPanel: React.FC<AiPlaygroundPanelProps> = ({ tasks, selectedTaskSid }) => {
   const task = selectedTaskSid ? tasks?.get(selectedTaskSid) : undefined;
-  const isCallTask = task && TaskHelper.isCallTask(task) && !!task.attributes?.call_sid;
+  const taskIdentity = getAiPlaygroundTaskIdentity(task);
+  const isCallTask = taskIdentity?.kind === 'voice' && task && TaskHelper.isCallTask(task);
+  const isDigitalTask = taskIdentity?.kind === 'digital';
   const realtimeOperatorsId = useUID();
   const postCallOperatorsId = useUID();
   const customerMemoryId = useUID();
@@ -30,7 +34,7 @@ const AiPlaygroundPanel: React.FC<AiPlaygroundPanelProps> = ({ tasks, selectedTa
           Flex UI AI Playground
         </Heading>
       </Box>
-      {!isCallTask ? (
+      {!taskIdentity ? (
         <Box
           display="flex"
           justifyContent="center"
@@ -40,10 +44,29 @@ const AiPlaygroundPanel: React.FC<AiPlaygroundPanelProps> = ({ tasks, selectedTa
           paddingY="space100"
         >
           <Text as="p" color="colorTextWeak" textAlign="center">
-            Operator Results will load when a call task is selected
+            Operator Results will load when a supported task is selected
           </Text>
         </Box>
-      ) : (
+      ) : isDigitalTask ? (
+        <Tabs selectedId={realtimeOperatorsId} baseId="ai-playground-digital-tabs" state={tabState}>
+          <Box paddingX="space60">
+            <TabList aria-label="AI Playground digital tabs">
+              <Tab id={realtimeOperatorsId}>Realtime Operators</Tab>
+              <Tab id={postCallOperatorsId}>Post Call Operators</Tab>
+            </TabList>
+          </Box>
+          <Box flex="1" minHeight="0" overflowY="auto" paddingX="space60" paddingBottom="space60">
+            <TabPanels>
+              <TabPanel>
+                <DigitalOperatorsTab task={task} mode="realtime" />
+              </TabPanel>
+              <TabPanel>
+                <DigitalOperatorsTab task={task} mode="postCall" />
+              </TabPanel>
+            </TabPanels>
+          </Box>
+        </Tabs>
+      ) : isCallTask ? (
         <Tabs selectedId={realtimeOperatorsId} baseId="ai-playground-tabs" state={tabState}>
           <Box paddingX="space60">
             <TabList aria-label="AI Playground tabs">
@@ -66,6 +89,19 @@ const AiPlaygroundPanel: React.FC<AiPlaygroundPanelProps> = ({ tasks, selectedTa
             </TabPanels>
           </Box>
         </Tabs>
+      ) : (
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          flex="1"
+          paddingX="space60"
+          paddingY="space100"
+        >
+          <Text as="p" color="colorTextWeak" textAlign="center">
+            Operator Results will load when a supported task is selected
+          </Text>
+        </Box>
       )}
     </Box>
   );

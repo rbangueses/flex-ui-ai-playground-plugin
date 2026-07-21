@@ -36,7 +36,7 @@ For production deployments, consider:
 ## Features
 
 - **RealTime Transcription** -- live speech-to-text displayed in a scrollable chat view on the task panel, with customer messages on the left and agent messages on the right
-- **Realtime AI Operators** -- operator results (Sentiment, Summary, Next-Best-Response, etc.) streamed to a Panel 2 side panel as the conversation happens, with dynamic subtabs that appear automatically per operator
+- **Realtime AI Operators** -- operator results (Sentiment, Summary, Next-Best-Response, etc.) displayed in Panel 2 as the conversation happens; voice calls use Sync streaming, while digital tasks poll Conversation Intelligence through `memoryProxy`
 - **Post Call Operators** -- operator results that fire after the conversation ends (e.g., AgentCoaching) displayed in the same panel
 - **AI Analysis Viewer** -- Flex side-nav view for browsing Conversation Intelligence conversations and operator results after a task is complete
 - **Customer Memory** -- profile lookup via Memora, showing Memory Retrieval, Observations, Conversation Summaries, and Traits for the caller
@@ -60,8 +60,9 @@ This plugin uses **active hydration** via TwiML `<Transcription>` with a convers
 
 **Current Scope:**
 - ✅ **Inbound voice calls** - Fully supported via TwiML `<Transcription>`
+- ✅ **Flex Conversations operator results** - Supported for active digital tasks when Conversation Orchestrator is already creating CIntel conversations
 - ⏸️ **Outbound calls from Flex** - Not yet implemented
-- ⏸️ **Flex Conversations (digital channels)** - Not yet implemented
+- ⏸️ **Flex Conversations live transcript rendering** - Not yet implemented in the Panel 2 transcription tab
 
 ### Alternative: Passive Hydration
 
@@ -77,7 +78,7 @@ This approach works alongside existing CPaaS voice infrastructure without requir
 Planned improvements to expand hydration support:
 
 - **Outbound Calls from Flex** - Handle conversations initiated by agents making outbound calls
-- **Flex Conversations Integration** - Support digital channels (SMS, WhatsApp, Chat) via Flex Conversations API
+- **Flex Conversations live transcripts** - Render digital message history in the same transcript UI used for voice
 - **Maestro Communication Events** - Replace `<Transcription>` webhook with `COMMUNICATION_ADDED` events from Maestro for more flexible utterance sources and multi-channel support
 
 **Note:** The `handleConversationEvents` function already handles Maestro conversation webhooks for the participant type workaround. This foundation can be extended to process `COMMUNICATION_ADDED` events for transcript display.
@@ -253,7 +254,9 @@ Data flows from Twilio's `<Transcription>` webhook through serverless functions 
 
 ### AI Playground Panel (Panel 2)
 
-Opens as a side panel when a voice call is selected. Contains three top-level tabs:
+Opens as a side panel when a supported task is selected.
+
+For voice calls, the panel contains three top-level tabs:
 
 **Realtime Operators** -- Displays results from operators triggered during the conversation. Each operator (Sentiment, Summary, Next-Best-Response, etc.) gets its own subtab that appears automatically when data arrives. Results include back/forward navigation through history and a blue pulse animation on new arrivals.
 
@@ -264,6 +267,8 @@ Opens as a side panel when a voice call is selected. Contains three top-level ta
 - **Observations** -- extracted observations from past conversations
 - **Conversation Summaries** -- summaries of previous conversations
 - **Traits** -- identified customer traits
+
+For Flex Conversations digital tasks, the panel shows **Realtime Operators** and **Post Call Operators**. The task's digital channel/conversation SID is used to find the active Conversation Intelligence conversation through `memoryProxy`; operator results are then polled every few seconds while the task remains selected. This assumes Conversation Orchestrator is already capturing the digital channel.
 
 ### Supervisor View
 
@@ -284,6 +289,16 @@ The operator results automatically update as new results arrive during the monit
 The `AI Analysis Viewer` appears as a Flex side-nav view for authenticated Flex users. It calls the `memoryProxy` serverless function with the current Flex token, then retrieves Conversation Intelligence conversations and operator results from the Intelligence API.
 
 The view supports filtering by conversation status, channel, call/channel SID, creation timestamp, and Intelligence Configuration ID. Selecting a conversation loads its operator results and groups them by trigger and operator name.
+
+### Rollback
+
+The last confirmed working baseline before live digital polling is tagged as `ai-analysis-viewer-working-baseline`. To revert local code to that state:
+
+```bash
+git reset --hard ai-analysis-viewer-working-baseline
+```
+
+If serverless functions were redeployed after that point, redeploy from the reverted checkout.
 
 ### TaskRouter Workspace Webhook
 
