@@ -11,7 +11,7 @@ import {
 } from './types';
 
 const SERVERLESS_DOMAIN = process.env.FLEX_APP_SERVERLESS_DOMAIN || '';
-const PROXY_URL = `https://${SERVERLESS_DOMAIN}/memoraProxy`;
+const PROXY_URL = `https://${SERVERLESS_DOMAIN}/memoryProxy`;
 
 async function callMemoraProxy<T>(params: Record<string, string | number | undefined>): Promise<T> {
   const token = Flex.Manager.getInstance().user.token;
@@ -278,4 +278,3 @@ export function useDeleteItems(profileId: string | null) {
 
   return { deleting, deleteProgress, deleteError, deleteItems };
 }
-

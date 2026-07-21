@@ -11,8 +11,26 @@ import RealTimeTranscriptionTab from './components/RealTimeTranscription';
 import { AiPlaygroundPanel } from './components/AiPlayground';
 import SupervisorCallTracker from './components/Supervisor/SupervisorCallTracker';
 import SupervisorOperatorResultsTab from './components/Supervisor/SupervisorOperatorResultsTab';
+import AiAnalysisViewer from './components/AiAnalysisViewer';
+import { DataPieChartIcon } from '@twilio-paste/icons/esm/DataPieChartIcon';
 
 const PLUGIN_NAME = 'AiPlaygroundPlugin';
+const AI_ANALYSIS_VIEW_NAME = 'ai-analysis-viewer';
+
+const AiAnalysisViewerSideLink: React.FC<{ activeView?: string; showLabel?: boolean }> = ({
+  activeView,
+  showLabel,
+}) => (
+  <Flex.SideLink
+    icon={<DataPieChartIcon decorative={false} title="AI Analysis Viewer" size="sizeIcon20" />}
+    iconActive={<DataPieChartIcon decorative={false} title="AI Analysis Viewer" size="sizeIcon20" />}
+    showLabel={showLabel}
+    isActive={activeView === AI_ANALYSIS_VIEW_NAME}
+    onClick={() => Flex.Actions.invokeAction('NavigateToView', { viewName: AI_ANALYSIS_VIEW_NAME })}
+  >
+    AI Analysis Viewer
+  </Flex.SideLink>
+);
 
 export default class AiPlaygroundPlugin extends FlexPlugin {
   constructor() {
@@ -41,6 +59,20 @@ export default class AiPlaygroundPlugin extends FlexPlugin {
     }
 
     initCallSyncTracking(flex, manager);
+
+    // Register AI Analysis Viewer as a full Flex view
+    flex.ViewCollection.Content.add(
+      <Flex.View key="ai-analysis-viewer-view" name={AI_ANALYSIS_VIEW_NAME}>
+        <AiAnalysisViewer />
+      </Flex.View>
+    );
+
+    flex.SideNav.Content.add(
+      <AiAnalysisViewerSideLink key="ai-analysis-viewer-side-link" />,
+      {
+        sortOrder: 35,
+      }
+    );
 
     // Register supervisor call tracker in TeamsView
     flex.TeamsView.Content.add(

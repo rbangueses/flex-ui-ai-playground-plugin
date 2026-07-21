@@ -75,7 +75,7 @@ The panel is registered on `AgentDesktopView.Panel2.Content` using `Content.repl
 
 **Customer Memory tab:**
 - `CustomerMemoryTab` reads `task.attributes.from` to get the caller's phone number
-- `useProfileLookup` hook calls the `memoraProxy` serverless function with `action: 'lookup'` to resolve a Memora profile ID
+- `useProfileLookup` hook calls the `memoryProxy` serverless function with `action: 'lookup'` to resolve a Memora profile ID
 - Sub-panels use paginated hooks (`useObservations`, `useTraits`, `useConversationSummaries`) and `useRecall` for semantic search, all proxied through the same serverless function
 
 ### Result Rendering (`OperatorResultCard`)
@@ -189,4 +189,4 @@ src/components/AiPlayground/
 - `@twilio-paste/core/spinner`, `@twilio-paste/core/alert` — Customer Memory loading/error states
 - `@twilio/flex-ui` — ITask, TaskHelper, Manager (for Flex token in Memora proxy calls)
 - `SyncToReduxService` + `useTrackedMap` hook — reactive Redux access to Sync data
-- `memoraProxy` serverless function — proxies Memora API calls with Flex token auth
+- `memoryProxy` serverless function — proxies Customer Memory and Conversation Intelligence API calls with Flex token auth

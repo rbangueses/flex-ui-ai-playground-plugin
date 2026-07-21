@@ -38,6 +38,7 @@ For production deployments, consider:
 - **RealTime Transcription** -- live speech-to-text displayed in a scrollable chat view on the task panel, with customer messages on the left and agent messages on the right
 - **Realtime AI Operators** -- operator results (Sentiment, Summary, Next-Best-Response, etc.) streamed to a Panel 2 side panel as the conversation happens, with dynamic subtabs that appear automatically per operator
 - **Post Call Operators** -- operator results that fire after the conversation ends (e.g., AgentCoaching) displayed in the same panel
+- **AI Analysis Viewer** -- Flex side-nav view for browsing Conversation Intelligence conversations and operator results after a task is complete
 - **Customer Memory** -- profile lookup via Memora, showing Memory Retrieval, Observations, Conversation Summaries, and Traits for the caller
 - **Supervisor Access** -- supervisors can view real-time transcription and operator results for monitored calls via the Teams View
 - **TaskRouter Integration** -- per-dialed-number routing with optional worker targeting
@@ -278,6 +279,12 @@ Supervisors can monitor agent calls from the Teams View. When viewing a monitore
 
 The operator results automatically update as new results arrive during the monitored call. The supervisor tracking is handled by `SupervisorCallTracker`, which subscribes to the same Sync maps as the agent desktop.
 
+### AI Analysis Viewer
+
+The `AI Analysis Viewer` appears as a Flex side-nav view for authenticated Flex users. It calls the `memoryProxy` serverless function with the current Flex token, then retrieves Conversation Intelligence conversations and operator results from the Intelligence API.
+
+The view supports filtering by conversation status, channel, call/channel SID, creation timestamp, and Intelligence Configuration ID. Selecting a conversation loads its operator results and groups them by trigger and operator name.
+
 ### TaskRouter Workspace Webhook
 
 The `handleTaskRouterWorkspaceWebhook` function handles conversation cleanup after tasks complete.
@@ -320,6 +327,12 @@ flex-ui-ai-playground-plugin/
       Supervisor/                                 Supervisor view components
         SupervisorCallTracker.tsx                 Teams View sync tracking for monitored calls
         SupervisorOperatorResultsTab.tsx          Supervisor TaskCanvas operator results tab with dropdown
+      AiAnalysisViewer/                           Flex side-nav archive view
+        AiAnalysisViewer.tsx                      Main view: filters, list, and result details
+        ConversationFilters.tsx                   Conversation Intelligence filter controls
+        ConversationList.tsx                      Selectable conversation browser
+        OperatorResultsPanel.tsx                  Grouped operator result display
+        api.ts, types.ts, utils.js                Proxy client, types, and formatting helpers
     utils/
       sync-to-redux/                              Standalone Sync-to-Redux library
         SyncToReduxService.ts                     Main service (singleton)
@@ -338,7 +351,7 @@ flex-ui-ai-playground-plugin/
       handleConversationEvents.protected.js       Participant type workaround
       handleOperatorResult.protected.js           Operator result handler
       handleTaskRouterWorkspaceWebhook.protected.js  TaskRouter event handler
-      memoraProxy.js                              Memora API proxy for Customer Memory
+      memoryProxy.js                              Customer Memory and Conversation Intelligence proxy
       realtimeTranscriptionSyncHelper.private.js  Sync integration for transcription
       syncHelper.private.js                       Reusable Sync CRUD operations
 

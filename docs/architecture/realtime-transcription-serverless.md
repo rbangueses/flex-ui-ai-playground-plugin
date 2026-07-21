@@ -698,7 +698,7 @@ twilio api:taskrouter:v1:workspaces:tasks:list --workspace-sid WSxxxx
 **Version 2.1 Changes:**
 - Replaced `TRANSCRIPTION_DOMAIN` with three-tier domain resolution: `TRANSCRIPTION_DOMAIN_OVERRIDE` > `context.DOMAIN_NAME` > `TRANSCRIPTION_DOMAIN_WHEN_RUN_LOCAL`
 - Added `MEMORA_STORE_ID` environment variable for Customer Memory features
-- Added `memoraProxy` serverless function for Memora API access
+- Added `memoryProxy` serverless function for Customer Memory and Conversation Intelligence API access
 - Added `handleOperatorResult` function for Conversation Intelligence operator results
 - Added `handleTaskRouterWorkspaceWebhook` function for conversation cleanup
 - Config loading failure now returns error TwiML instead of using defaults
