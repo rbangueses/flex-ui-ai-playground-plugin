@@ -1,4 +1,4 @@
-# AI Playground Flex Plugin
+# Flex CIntel Webchat Analysis Viewer
 
 A Twilio Flex plugin that adds real-time voice transcription, real-time and post-conversation AI operator results, historical Conversation Intelligence analysis browsing, and customer memory retrieval to the agent desktop.
 
@@ -137,8 +137,8 @@ Planned improvements to expand hydration support:
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/rbangueses/flex-ui-ai-playground-plugin.git
-cd flex-ui-ai-playground-plugin
+git clone https://github.com/rbangueses/flex-cintel-webchat-analysis-viewer.git
+cd flex-cintel-webchat-analysis-viewer
 
 # 2. Install plugin dependencies
 npm install
@@ -364,7 +364,7 @@ The `handleConversationEvents` function automatically fixes participant types fo
 ## Project Structure
 
 ```
-flex-ui-ai-playground-plugin/
+flex-cintel-webchat-analysis-viewer/
   package.json                                    Flex plugin package
   src/
     index.ts                                      Plugin entry point
