@@ -2,6 +2,18 @@
 
 A Twilio Flex plugin that adds real-time voice transcription, AI operator results, and customer memory retrieval to the agent desktop during active calls.
 
+## About This Fork
+
+This proof-of-concept fork is based on the original
+[twilio-professional-services/flex-ui-ai-playground-plugin](https://github.com/twilio-professional-services/flex-ui-ai-playground-plugin)
+repository from Twilio Professional Services.
+
+Credit for the original plugin architecture, realtime transcription flow, operator result webhook handling, Sync integration, and AI Playground Flex UI belongs to the original maintainers and contributors of that repository. This fork adds experimental functionality for:
+
+- browsing historical Conversation Intelligence analysis from a Flex view
+- polling Conversation Intelligence operator results for active Flex digital/webchat tasks
+- generating a synthetic Flex webchat interaction for local testing
+
 ## Intent & Scope
 
 This plugin is designed as an **exploration and iteration tool** for Twilio Conversational Intelligence language operators and customer memory features. It handles the "plumbing" of connecting operator results to the Flex UI, allowing developers to quickly iterate on operator configurations without building custom UI integrations.
