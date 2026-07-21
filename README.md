@@ -1,6 +1,6 @@
 # AI Playground Flex Plugin
 
-A Twilio Flex plugin that adds real-time voice transcription, AI operator results, and customer memory retrieval to the agent desktop during active calls.
+A Twilio Flex plugin that adds real-time voice transcription, real-time and post-conversation AI operator results, historical Conversation Intelligence analysis browsing, and customer memory retrieval to the agent desktop.
 
 ## About This Fork
 
@@ -48,21 +48,25 @@ For production deployments, consider:
 ## Features
 
 - **RealTime Transcription** -- live speech-to-text displayed in a scrollable chat view on the task panel, with customer messages on the left and agent messages on the right
-- **Realtime AI Operators** -- operator results (Sentiment, Summary, Next-Best-Response, etc.) displayed in Panel 2 as the conversation happens; voice calls use Sync streaming, while digital tasks poll Conversation Intelligence through `memoryProxy`
-- **Post Call Operators** -- operator results that fire after the conversation ends (e.g., AgentCoaching) displayed in the same panel
-- **AI Analysis Viewer** -- Flex side-nav view for browsing Conversation Intelligence conversations and operator results after a task is complete
+- **Realtime AI Operators** -- operator results (Sentiment, Summary, Next-Best-Response, etc.) displayed in Panel 2 as the conversation happens; voice calls use Sync streaming, while active digital/webchat tasks poll Conversation Intelligence through `memoryProxy`
+- **Post Call Operators** -- operator results that fire after the conversation ends (e.g., AgentCoaching) displayed in the same panel for voice and digital/webchat tasks
+- **AI Analysis Viewer** -- Flex side-nav view for browsing historical Conversation Intelligence conversations and operator results after a Flex task is complete or no longer selected
 - **Customer Memory** -- profile lookup via Memora, showing Memory Retrieval, Observations, Conversation Summaries, and Traits for the caller
 - **Supervisor Access** -- supervisors can view real-time transcription and operator results for monitored calls via the Teams View
 - **TaskRouter Integration** -- per-dialed-number routing with optional worker targeting
 - **Participant Type Fix** -- automatic correction of participant types for conversations hydrated via `<Transcription>`
+- **Synthetic webchat test helper** -- local script for creating a test Flex webchat interaction that can trigger digital operator polling
 
 ## Maestro/Twilio Conversations Orchestrator Hydration
 
-This plugin uses **active hydration** via TwiML `<Transcription>` with a conversation configuration ID to create and populate Maestro conversations.
+This plugin supports two Conversation Intelligence data paths:
+
+1. **Voice calls** use active hydration via TwiML `<Transcription>` with a conversation configuration ID. The serverless webhooks receive transcription and operator callbacks, then write active-call state to Twilio Sync.
+2. **Flex digital/webchat conversations** rely on Twilio Conversations Orchestrator already creating and analyzing the Conversation Intelligence conversation. The plugin does not create the analysis pipeline for webchat; it discovers the active CIntel conversation from the Flex task's conversation/channel SID and polls operator results through `memoryProxy`.
 
 ### Current Implementation: Active Hydration
 
-**How it works:**
+**Voice call flow:**
 1. Incoming voice calls trigger `handleIncomingCall` function
 2. TwiML `<Start><Transcription>` element includes `conversationConfiguration` parameter
 3. Conversation configuration ID is mapped per phone number in `config.private.json`
@@ -70,11 +74,30 @@ This plugin uses **active hydration** via TwiML `<Transcription>` with a convers
 5. Conversation Intelligence operators execute based on configuration
 6. Operator results flow to `handleOperatorResult` webhook for display in Flex UI
 
+**Digital/webchat flow:**
+1. A Flex Conversations task is selected in the agent desktop
+2. The plugin extracts likely channel identifiers from task attributes, such as `conversationSid`, `channelSid`, or interaction channel attributes
+3. `memoryProxy` calls the Conversation Intelligence API and searches for a CIntel conversation whose channel ID matches the Flex conversation/channel SID
+4. While the task remains selected, the plugin polls operator results every few seconds
+5. Results triggered on `COMMUNICATION` are shown in **Realtime Operators**; results triggered on `CONVERSATION_END` are shown in **Post Call Operators**
+
 **Current Scope:**
 - ✅ **Inbound voice calls** - Fully supported via TwiML `<Transcription>`
-- ✅ **Flex Conversations operator results** - Supported for active digital tasks when Conversation Orchestrator is already creating CIntel conversations
+- ✅ **Flex webchat/digital operator results** - Supported for active Flex Conversations tasks when Conversation Orchestrator is already creating and analyzing CIntel conversations
+- ✅ **Historical analysis browsing** - Supported through the `AI Analysis Viewer` Flex view, which queries CIntel conversations and operator results after tasks are completed
 - ⏸️ **Outbound calls from Flex** - Not yet implemented
 - ⏸️ **Flex Conversations live transcript rendering** - Not yet implemented in the Panel 2 transcription tab
+
+### Historical Analysis Viewer
+
+Flex task attributes and task-scoped UI state disappear once a task is completed, but Conversation Intelligence conversations and operator results remain available through the Intelligence API. This fork adds an `AI Analysis Viewer` side-nav view so authenticated Flex users can browse those post-conversation analysis results from inside Flex.
+
+The viewer uses `memoryProxy` rather than calling Twilio APIs directly from the browser. The Flex UI sends the logged-in user's Flex token to the serverless function, `twilio-flex-token-validator` validates access, and the function uses server-side Twilio credentials to call:
+
+- `GET /v3/Conversations` to list and filter analyzed conversations
+- `GET /v3/OperatorResults` to fetch operator outputs for the selected conversation
+
+The UI groups operator results by trigger and operator name, so realtime `COMMUNICATION` results and post-conversation `CONVERSATION_END` results can be reviewed after the original Flex task is gone.
 
 ### Alternative: Passive Hydration
 
@@ -100,6 +123,7 @@ Planned improvements to expand hydration support:
 - **Twilio account** with one or more voice-capable phone numbers
 - **Twilio Flex** instance (the plugin targets Flex UI 2.x)
 - **Conversation Intelligence** with at least one configuration (`conv_configuration_xxx`)
+- **Twilio Conversations Orchestrator** configured for Flex digital/webchat capture if using digital operator polling
 - **Memora store** (`mem_store_xxx`) if using Customer Memory
 - **TaskRouter workflow** with a Workflow SID (`WW...`)
 - **Node.js** 18 or 20
@@ -113,7 +137,7 @@ Planned improvements to expand hydration support:
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/twilio-professional-services/flex-ui-ai-playground-plugin.git
+git clone https://github.com/rbangueses/flex-ui-ai-playground-plugin.git
 cd flex-ui-ai-playground-plugin
 
 # 2. Install plugin dependencies
@@ -280,7 +304,7 @@ For voice calls, the panel contains three top-level tabs:
 - **Conversation Summaries** -- summaries of previous conversations
 - **Traits** -- identified customer traits
 
-For Flex Conversations digital tasks, the panel shows **Realtime Operators** and **Post Call Operators**. The task's digital channel/conversation SID is used to find the active Conversation Intelligence conversation through `memoryProxy`; operator results are then polled every few seconds while the task remains selected. This assumes Conversation Orchestrator is already capturing the digital channel.
+For Flex Conversations digital tasks, including webchat, the panel shows **Realtime Operators** and **Post Call Operators**. The task's digital channel/conversation SID is used to find the active Conversation Intelligence conversation through `memoryProxy`; operator results are then polled every few seconds while the task remains selected. This assumes Conversation Orchestrator is already capturing and analyzing the digital channel.
 
 ### Supervisor View
 
@@ -300,7 +324,24 @@ The operator results automatically update as new results arrive during the monit
 
 The `AI Analysis Viewer` appears as a Flex side-nav view for authenticated Flex users. It calls the `memoryProxy` serverless function with the current Flex token, then retrieves Conversation Intelligence conversations and operator results from the Intelligence API.
 
-The view supports filtering by conversation status, channel, call/channel SID, creation timestamp, and Intelligence Configuration ID. Selecting a conversation loads its operator results and groups them by trigger and operator name.
+The view supports filtering by conversation status, channel, call/channel SID, creation timestamp, Intelligence Configuration ID, and operator ID. Selecting a conversation loads its operator results and groups them by trigger and operator name. This is useful for reviewing post-conversation analysis after the Flex task has been completed and the active task UI no longer has the results in memory.
+
+### Synthetic Webchat Test Helper
+
+For local POC testing, this fork includes a helper script that creates a Twilio Conversation, adds a test webchat customer, sends an initial customer message, and creates a Flex Interaction routed through TaskRouter:
+
+```bash
+node scripts/create-flex-webchat-interaction.js --inspect
+node scripts/create-flex-webchat-interaction.js --workflow-sid WWxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+By default the generated customer is `Test Customer` and the first message is:
+
+```text
+Hi, I need help registering a new device on my account.
+```
+
+That message is intended to exercise Next-Best-Action style realtime operators during webchat testing. The helper reads Twilio credentials from `serverless-ai-playground-plugin/.env` or standard `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` environment variables.
 
 ### Rollback
 
@@ -359,7 +400,7 @@ flex-ui-ai-playground-plugin/
         ConversationFilters.tsx                   Conversation Intelligence filter controls
         ConversationList.tsx                      Selectable conversation browser
         OperatorResultsPanel.tsx                  Grouped operator result display
-        api.ts, types.ts, utils.js                Proxy client, types, and formatting helpers
+        api.ts, types.ts, utils.ts                Proxy client, types, and formatting helpers
     utils/
       sync-to-redux/                              Standalone Sync-to-Redux library
         SyncToReduxService.ts                     Main service (singleton)
@@ -381,6 +422,9 @@ flex-ui-ai-playground-plugin/
       memoryProxy.js                              Customer Memory and Conversation Intelligence proxy
       realtimeTranscriptionSyncHelper.private.js  Sync integration for transcription
       syncHelper.private.js                       Reusable Sync CRUD operations
+
+  scripts/
+    create-flex-webchat-interaction.js            Local helper for creating test Flex webchat interactions
 
   docs/
     architecture/                                 Implementation deep-dives (for developers and LLM context)
