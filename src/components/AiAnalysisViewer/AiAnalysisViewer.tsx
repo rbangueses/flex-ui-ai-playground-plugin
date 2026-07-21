@@ -141,12 +141,14 @@ const AiAnalysisViewer: React.FC = () => {
         />
       </Box>
 
-      <Box display="grid" gridTemplateColumns="minmax(360px, 420px) minmax(0, 1fr)" height="calc(100% - 180px)">
+      <Box display="grid" gridTemplateColumns="minmax(360px, 420px) minmax(0, 1fr)" height="calc(100% - 180px)" overflow="hidden">
         <Box
           borderRightWidth="borderWidth10"
           borderRightStyle="solid"
           borderRightColor="colorBorderWeaker"
           padding="space50"
+          minWidth="0"
+          overflowX="hidden"
           overflowY="auto"
         >
           <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom="space40">

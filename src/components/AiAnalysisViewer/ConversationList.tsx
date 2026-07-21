@@ -1,7 +1,6 @@
 import React from 'react';
 import { Badge } from '@twilio-paste/core/badge';
 import { Box } from '@twilio-paste/core/box';
-import { Button } from '@twilio-paste/core/button';
 import { Text } from '@twilio-paste/core/text';
 import { IntelligenceConversation } from './types';
 import * as analysisUtils from './utils';
@@ -29,6 +28,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
     <Box display="flex" flexDirection="column" rowGap="space30">
       {conversations.map((conversation) => {
         const selected = conversation.id === selectedConversationId;
+        const title = analysisUtils.getConversationTitle(conversation);
+        const channelId = analysisUtils.getConversationPrimaryChannelId(conversation) || conversation.id;
 
         return (
           <Box
@@ -45,23 +46,45 @@ const ConversationList: React.FC<ConversationListProps> = ({
             backgroundColor={selected ? 'colorBackgroundPrimaryWeakest' : 'colorBackgroundBody'}
             cursor="pointer"
             width="100%"
+            overflow="hidden"
           >
             <Box display="flex" justifyContent="space-between" alignItems="center" columnGap="space30">
-              <Text as="span" fontWeight="fontWeightSemibold">
-                {analysisUtils.getConversationTitle(conversation)}
-              </Text>
+              <Box minWidth="0" flex="1">
+                <Text
+                  as="span"
+                  display="block"
+                  fontWeight="fontWeightSemibold"
+                  overflow="hidden"
+                  textOverflow="ellipsis"
+                  whiteSpace="nowrap"
+                  title={title}
+                >
+                  {title}
+                </Text>
+              </Box>
               {conversation.status && (
-                <Badge as="span" variant={conversation.status === 'CLOSED' ? 'decorative20' : 'decorative10'}>
-                  {conversation.status}
-                </Badge>
+                <Box flexShrink={0}>
+                  <Badge as="span" variant={conversation.status === 'CLOSED' ? 'decorative20' : 'decorative10'}>
+                    {conversation.status}
+                  </Badge>
+                </Box>
               )}
             </Box>
             <Box display="flex" flexDirection="column" rowGap="space10" marginTop="space30">
               <Text as="span" color="colorTextWeak" fontSize="fontSize20">
                 {analysisUtils.formatDateTime(conversation.createdAt)}
               </Text>
-              <Text as="span" color="colorTextWeak" fontSize="fontSize20">
-                {analysisUtils.getConversationPrimaryChannelId(conversation) || conversation.id}
+              <Text
+                as="span"
+                color="colorTextWeak"
+                display="block"
+                fontSize="fontSize20"
+                overflow="hidden"
+                textOverflow="ellipsis"
+                whiteSpace="nowrap"
+                title={channelId}
+              >
+                {channelId}
               </Text>
               <Box display="flex" columnGap="space20" flexWrap="wrap">
                 {(conversation.channels || []).map((channel) => (

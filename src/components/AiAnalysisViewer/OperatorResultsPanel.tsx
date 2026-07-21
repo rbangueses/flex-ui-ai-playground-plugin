@@ -30,22 +30,27 @@ const OperatorResultsPanel: React.FC<OperatorResultsPanelProps> = ({
   }
 
   const groups = analysisUtils.groupOperatorResults(results) as OperatorResultGroup[];
+  const conversationTitle = conversation.name || conversation.id;
 
   return (
-    <Box padding="space50" overflowY="auto" height="100%">
+    <Box padding="space50" overflowX="hidden" overflowY="auto" height="100%" minWidth="0">
       <Box display="flex" justifyContent="space-between" alignItems="flex-start" columnGap="space40">
-        <Box>
-          <Heading as="h3" variant="heading30" marginBottom="space0">
-            {conversation.name || conversation.id}
-          </Heading>
+        <Box minWidth="0" flex="1">
+          <Box overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap" title={conversationTitle}>
+            <Heading as="h3" variant="heading30" marginBottom="space0">
+              {conversationTitle}
+            </Heading>
+          </Box>
           <Text as="p" color="colorTextWeak" marginBottom="space20">
             {analysisUtils.formatDateTime(conversation.createdAt)}
           </Text>
         </Box>
         {conversation.status && (
-          <Badge as="span" variant="decorative20">
-            {conversation.status}
-          </Badge>
+          <Box flexShrink={0}>
+            <Badge as="span" variant="decorative20">
+              {conversation.status}
+            </Badge>
+          </Box>
         )}
       </Box>
 
@@ -103,8 +108,8 @@ const OperatorResultsPanel: React.FC<OperatorResultsPanelProps> = ({
                     borderRadius="borderRadius20"
                     padding="space40"
                   >
-                    <Box display="flex" justifyContent="space-between" marginBottom="space30">
-                      <Box display="flex" columnGap="space20" alignItems="center">
+                    <Box display="flex" justifyContent="space-between" columnGap="space30" marginBottom="space30">
+                      <Box display="flex" columnGap="space20" alignItems="center" minWidth="0" flex="1">
                         {result.outputFormat && (
                           <Badge as="span" variant="neutral">
                             {result.outputFormat}
@@ -115,9 +120,11 @@ const OperatorResultsPanel: React.FC<OperatorResultsPanelProps> = ({
                         </Text>
                       </Box>
                       {result.id && (
-                        <Text as="span" color="colorTextWeak" fontSize="fontSize20">
-                          {result.id}
-                        </Text>
+                        <Box minWidth="0" maxWidth="size40" overflow="hidden" textOverflow="ellipsis" title={result.id} whiteSpace="nowrap">
+                          <Text as="span" color="colorTextWeak" display="block" fontSize="fontSize20">
+                            {result.id}
+                          </Text>
+                        </Box>
                       )}
                     </Box>
                     <Text
