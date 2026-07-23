@@ -30,7 +30,13 @@ export function getDigitalOperatorGroups(
 ): DigitalOperatorGroup[] {
   const grouped = new Map<string, DigitalOperatorGroup>();
 
-  for (const result of results) {
+  // The Intelligence API returns results newest-first; OperatorResultCard
+  // treats the last item in `items` as the latest, so sort ascending here.
+  const sorted = [...results].sort(
+    (a, b) => new Date(a.dateCreated || 0).getTime() - new Date(b.dateCreated || 0).getTime(),
+  );
+
+  for (const result of sorted) {
     if (result.executionDetails?.trigger?.on !== triggerOn) continue;
 
     const displayName = getOperatorDisplayName(result);
